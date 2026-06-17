@@ -29,7 +29,7 @@ def create_pdf(df, firma_adi, sip_no, sip_tar):
     
     # Bilgi Tablosu
     bilgi_data = [
-        ["SABİT YAZI 1", "SABİT YAZI 2"],
+        ["Dgs Dış Ticaret Anonim Şirketi", "Sevk Tarihi"],
         [f"Firma: {firma_adi}", f"Sipariş No: {sip_no}"],
         ["", f"Sipariş Tarihi: {sip_tar}"]
     ]

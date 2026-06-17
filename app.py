@@ -7,6 +7,7 @@ from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import os
+from reportlab.platypus import Paragraph
 
 # Font Ayarı
 FONT_NAME = 'Arial'
@@ -18,57 +19,59 @@ else:
 def create_pdf(df, firma_adi, sip_no, sip_tar):
     file_name = "talep_formu.pdf"
     doc = SimpleDocTemplate(file_name, pagesize=A4, leftMargin=40, rightMargin=40)
-    elements = []
+    elements = []  # <--- İşte eksik olan bu satır!
     styles = getSampleStyleSheet()
     
     # Başlık
-    title_style = ParagraphStyle('TitleStyle', parent=styles['Title'], fontName=FONT_NAME, fontSize=26, alignment=1)
+    title_style = ParagraphStyle('TitleStyle', parent=styles['Title'], fontName=FONT_NAME, fontSize=16, alignment=1)
     elements.append(Paragraph("DEPO TALEP FORMU", title_style))
     elements.append(Spacer(1, 15))
     
-    # 2 Sütunlu Bilgi Alanı (Tabloyla hizalı)
+    # Bilgi Tablosu
     bilgi_data = [
-        ["Dgs Dış Ticaret Anonim Şirketi", "Sevk Tarihi:"],
-        [f" {firma_adi}", f"Sipariş No: {sip_no}"],
+        ["SABİT YAZI 1", "SABİT YAZI 2"],
+        [f"Firma: {firma_adi}", f"Sipariş No: {sip_no}"],
         ["", f"Sipariş Tarihi: {sip_tar}"]
     ]
-    
-    bilgi_table = Table(bilgi_data, colWidths=[280 , 280])
+    bilgi_table = Table(bilgi_data, colWidths=[257.5, 257.5])
     bilgi_table.setStyle(TableStyle([
-        ('FONTNAME', (0, 0), (-1, -1), FONT_NAME),
+        ('FONTNAME', (0, 0), (-1, -1), FONT_NAME), 
         ('FONTSIZE', (0, 0), (-1, -1), 10),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
     ]))
     elements.append(bilgi_table)
     elements.append(Spacer(1, 15))
     
-    # Ana Tablo
-    headers = ["Stok Kod", "Stok Ad", "Miktar", "Depo Stok", "KG", "Üretici", "Paket", "Palet", "Raf"]
+    # 9 SÜTUNLU ANA TABLO
+    headers = ["Kod", "Stok Ad", "Miktar", "Depo", "KG", "Üretici", "Paket", "Palet", "Raf"]
     data = [headers]
+    
+    cell_style = ParagraphStyle('CellText', fontName=FONT_NAME, fontSize=8, leading=10)
+    
     for _, row in df.iterrows():
         data.append([
-            str(row.get('Stok Kod', '')), 
-            str(row.get('Stok Ad', '')), 
-            str(row.get('Miktar', '')), # Miktar verisi burada
-            str(row.get('Depo', '')),
-            str(row.get('KG', '')), 
-            str(row.get('Menşei', '')), 
+            Paragraph(str(row.get('Stok Kod', '')), cell_style),
+            Paragraph(str(row.get('Stok Ad', '')), cell_style),
+            Paragraph(str(row.get('Miktar', '')), cell_style),
+            Paragraph(str(row.get('Depo', '')), cell_style),
+            Paragraph(str(row.get('KG', '')), cell_style),
+            Paragraph(str(row.get('Menşei', '')), cell_style),
             "", "", 
-            str(row.get('Raf', ''))
+            Paragraph(str(row.get('Raf', '')), cell_style)
         ])
     
-    table = Table(data, colWidths=[60, 110, 60, 60, 50, 60, 50, 50, 60])
+    # Tablo genişlikleri (Toplam 515)
+    table = Table(data, colWidths=[50, 120, 40, 50, 40, 60, 40, 40, 35])
     table.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-        ('FONTNAME', (0, 0), (-1, -1), FONT_NAME),
-        ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
     ]))
     elements.append(table)
+    
     doc.build(elements)
     return file_name
-
 # --- ANA UYGULAMA ---
 st.title("Depo Talep Oluşturucu")
 
